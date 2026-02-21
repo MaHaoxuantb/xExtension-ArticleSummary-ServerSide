@@ -1,6 +1,6 @@
 :root {
   /* Default theme variables (can be overridden by user themes) */
-  --oai-bg-color: #ecebd7;
+  --oai-bg-color: #efebd69d;
   --oai-border-color: #e0e0e0;
   --oai-text-color: #333;
   --oai-btn-bg: #b953b9e0;
@@ -34,7 +34,7 @@
   margin-bottom: 1.5em;
   border: 1px solid var(--oai-border-color, #e0e0e0);
   border-radius: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
   transition: all 0.3s ease;
 }
 
