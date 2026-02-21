@@ -9,6 +9,14 @@
   --oai-border-radius: 20px;
 }
 
+@font-face {
+  font-family: 'Source Serif 4';
+  src: url('./fonts/SourceSerif4-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Nord Theme specific variables (will be used if Nord theme is active) */
 .theme-nord :root {
   --oai-bg-color: #2e3440;
@@ -21,12 +29,25 @@
 
 .oai-summary-wrap {
   background: var(--oai-bg-color, #f8f8f8);
+  position: relative;
   padding: 0.6em;
   margin-bottom: 1.5em;
   border: 1px solid var(--oai-border-color, #e0e0e0);
-  border-radius: var(--oai-border-radius, 20px);
+  border-radius: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
+}
+
+.oai-summary-attrib {
+  position: absolute;
+  top: 0.6em;
+  right: 0.9em;
+  font-size: 0.75em;
+  opacity: 0.55;
+  color: var(--oai-text-color, #333);
+  font-family: 'Source Serif 4', serif;
+  pointer-events: none;
+  user-select: none;
 }
 
 .oai-summary-btn {
@@ -36,10 +57,45 @@
   background-color: var(--oai-btn-bg, #6366f1);
   color: var(--oai-btn-text, #fff);
   border: none;
-  border-radius: var(--oai-border-radius, 6px);
+  border-radius: 12px;
   cursor: pointer;
   transition: background-color 0.3s ease;
   font-weight: 500;
+}
+
+.oai-summary-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.6em;
+  margin-bottom: 0.8em;
+}
+
+.oai-summary-actions .oai-action-btn {
+  margin-bottom: 0;
+}
+
+.oai-explain-btn {
+  font-size: 1.1em;
+  padding: 0.5em 0.5em;
+  background-color: transparent;
+  color: var(--oai-btn-bg, #6366f1);
+  border: 1px solid var(--oai-btn-bg, #6366f1);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: color 0.3s ease, border-color 0.3s ease;
+  font-weight: 500;
+}
+
+.oai-explain-btn:hover {
+  background-color: transparent;
+  color: var(--oai-btn-hover-bg, #4f46e5);
+  border-color: var(--oai-btn-hover-bg, #4f46e5);
+}
+
+.oai-explain-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .oai-summary-btn:hover {
@@ -54,6 +110,14 @@
 .oai-summary-content {
   color: var(--oai-text-color, #333);
   line-height: 1.5;
+  font-family: 'Source Serif 4', serif;
+}
+
+.oai-summary-content code,
+.oai-summary-content pre,
+.oai-summary-content kbd,
+.oai-summary-content samp {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 }
 
 .oai-summary-content h1,
@@ -62,8 +126,8 @@
 .oai-summary-content h4,
 .oai-summary-content h5,
 .oai-summary-content h6 {
-  margin-top: 1em;
-  margin-bottom: 0.5em;
+  margin-top: 0.8em;
+  margin-bottom: 0.4em;
   font-weight: 600;
   color: var(--oai-text-color, #333);
 }
@@ -82,29 +146,59 @@
 
 .oai-summary-content p,
 .oai-summary-content div {
-  margin-bottom: 0.4em;
+  margin-top: 0.8em;
+  margin-bottom: 0.8em;
 }
 
 .oai-summary-content ul,
 .oai-summary-content ol {
-  margin-bottom: 0.4em;
-  padding-left: 1.0em;
+  margin-top: 0.8em;
+  margin-bottom: 0.8em;
+  padding-left: 1.5em;
 }
 
 .oai-summary-content li {
+  margin-top: 0.4em;
   margin-bottom: 0.4em;
 }
 
+.oai-summary-content p:first-child,
+.oai-summary-content div:first-child,
+.oai-summary-content ul:first-child,
+.oai-summary-content ol:first-child,
+.oai-summary-content h1:first-child,
+.oai-summary-content h2:first-child,
+.oai-summary-content h3:first-child,
+.oai-summary-content h4:first-child,
+.oai-summary-content h5:first-child,
+.oai-summary-content h6:first-child {
+  margin-top: 0;
+}
+
+.oai-summary-content p:last-child,
+.oai-summary-content div:last-child,
+.oai-summary-content ul:last-child,
+.oai-summary-content ol:last-child,
+.oai-summary-content h1:last-child,
+.oai-summary-content h2:last-child,
+.oai-summary-content h3:last-child,
+.oai-summary-content h4:last-child,
+.oai-summary-content h5:last-child,
+.oai-summary-content h6:last-child {
+  margin-bottom: 0;
+}
+
 /* Loading state */
-.oai-loading .oai-summary-btn::after {
+.oai-loading .oai-action-btn.oai-active::after {
   content: '';
   display: inline-block;
   width: 16px;
   height: 16px;
   margin-left: 8px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid currentColor;
   border-radius: 50%;
-  border-top-color: #fff;
+  border-left-color: transparent;
+  border-bottom-color: transparent;
   animation: spin 1s linear infinite;
 }
 

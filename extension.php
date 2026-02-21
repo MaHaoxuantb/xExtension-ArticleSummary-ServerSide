@@ -39,6 +39,13 @@ final class ArticleSummaryExtension extends Minz_Extension
       FreshRSS_Context::$user_conf->oai_prompt = _t('ArticleSummary.config.default_prompt');
       FreshRSS_Context::$user_conf->save();
     }
+
+    // Only set default explain prompt if not already set (null)
+    // 仅当讲解提示词尚未设置时（null）才设置默认值
+    if (is_null(FreshRSS_Context::$user_conf->oai_explain_prompt)) {
+      FreshRSS_Context::$user_conf->oai_explain_prompt = _t('ArticleSummary.config.default_explain_prompt');
+      FreshRSS_Context::$user_conf->save();
+    }
     
     // Append static resources
     // 附加静态资源
@@ -73,9 +80,18 @@ final class ArticleSummaryExtension extends Minz_Extension
       )
     ));
 
+    $url_explain = Minz_Url::display(array(
+      'c' => 'ArticleSummary',
+      'a' => 'explain',
+      'params' => array(
+        'id' => $entry->id()
+      )
+    ));
+
     // Get translated texts
     // 获取翻译文本
     $summarizeText = _t('ArticleSummary.button.summarize');
+    $explainText = _t('ArticleSummary.button.explain');
     $loadingText = _t('ArticleSummary.status.loading');
     $errorText = _t('ArticleSummary.status.error');
     $requestFailedText = _t('ArticleSummary.status.request_failed');
@@ -84,12 +100,21 @@ final class ArticleSummaryExtension extends Minz_Extension
     // 向文章内容添加总结按钮和容器，并将翻译文本作为data属性
     $entry->_content(
       '<div class="oai-summary-wrap">'
+      . '<div class="oai-summary-attrib">by LinecoFlow AI</div>'
+      . '<div class="oai-summary-actions">'
       . '<button data-request="' . $url_summary . '" '
       . 'data-summarize-text="' . $summarizeText . '" '
       . 'data-loading-text="' . $loadingText . '" '
       . 'data-error-text="' . $errorText . '" '
       . 'data-request-failed-text="' . $requestFailedText . '" '
-      . 'class="oai-summary-btn"></button>'
+      . 'class="oai-summary-btn oai-action-btn"></button>'
+      . '<button data-request="' . $url_explain . '" '
+      . 'data-explain-text="' . $explainText . '" '
+      . 'data-loading-text="' . $loadingText . '" '
+      . 'data-error-text="' . $errorText . '" '
+      . 'data-request-failed-text="' . $requestFailedText . '" '
+      . 'class="oai-explain-btn oai-action-btn"></button>'
+      . '</div>'
       . '<div class="oai-summary-content"></div>'
       . '</div>'
       . $entry->content()
@@ -110,12 +135,19 @@ final class ArticleSummaryExtension extends Minz_Extension
       $oai_key = Minz_Request::param('oai_key', '');
       $oai_model = Minz_Request::param('oai_model', '');
       $oai_prompt = Minz_Request::param('oai_prompt', '');
+      $oai_explain_prompt = Minz_Request::param('oai_explain_prompt', '');
       $oai_provider = Minz_Request::param('oai_provider', '');
       
       // If prompt is empty string, set to null so default can be applied
       // 如果提示词为空字符串，则设置为null以便应用默认值
       if (trim($oai_prompt) === '') {
         $oai_prompt = null;
+      }
+
+      // If explain prompt is empty string, set to null so default can be applied
+      // 如果讲解提示词为空字符串，则设置为null以便应用默认值
+      if (trim($oai_explain_prompt) === '') {
+        $oai_explain_prompt = null;
       }
       
       // Set the configuration values
@@ -124,6 +156,7 @@ final class ArticleSummaryExtension extends Minz_Extension
       FreshRSS_Context::$user_conf->oai_key = $oai_key;
       FreshRSS_Context::$user_conf->oai_model = $oai_model;
       FreshRSS_Context::$user_conf->oai_prompt = $oai_prompt;
+      FreshRSS_Context::$user_conf->oai_explain_prompt = $oai_explain_prompt;
       FreshRSS_Context::$user_conf->oai_provider = $oai_provider;
       
       // Save the configuration

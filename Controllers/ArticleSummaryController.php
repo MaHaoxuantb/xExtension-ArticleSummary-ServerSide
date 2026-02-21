@@ -10,6 +10,26 @@ final class FreshExtension_ArticleSummary_Controller extends Minz_ActionControll
    * 处理总结动作
    */
   public function summarizeAction(): void {
+    $oai_prompt = FreshRSS_Context::$user_conf->oai_prompt;
+    $this->runAiRequestWithPrompt($oai_prompt);
+  }
+
+  /**
+   * Handle the explain action
+   * 处理讲解动作
+   */
+  public function explainAction(): void {
+    $oai_prompt = FreshRSS_Context::$user_conf->oai_explain_prompt;
+    $this->runAiRequestWithPrompt($oai_prompt);
+  }
+
+  /**
+   * Shared handler for summarize/explain actions.
+   * summarize/explain 动作的共享处理逻辑。
+   *
+   * @param mixed $oai_prompt System prompt to send to the provider.
+   */
+  private function runAiRequestWithPrompt(mixed $oai_prompt): void {
     // Start output buffering to prevent output before header() call
     // This is essential for JSON API responses because header() must be called before any output
     // $this->view->_layout(false) may trigger some output, causing "headers already sent" error
@@ -17,7 +37,7 @@ final class FreshExtension_ArticleSummary_Controller extends Minz_ActionControll
     // 这对于 JSON API 响应是必要的，因为 header() 必须在任何输出之前调用
     // $this->view->_layout(false) 可能会触发某些输出，导致 headers already sent 错误
     ob_start();
-    
+
     $this->view->_layout(false);
 
     // Get configuration values from user settings
@@ -25,7 +45,6 @@ final class FreshExtension_ArticleSummary_Controller extends Minz_ActionControll
     $oai_url = FreshRSS_Context::$user_conf->oai_url;
     $oai_key = FreshRSS_Context::$user_conf->oai_key;
     $oai_model = FreshRSS_Context::$user_conf->oai_model;
-    $oai_prompt = FreshRSS_Context::$user_conf->oai_prompt;
     $oai_provider = FreshRSS_Context::$user_conf->oai_provider;
 
     // Check if all required configurations are provided
@@ -67,9 +86,9 @@ final class FreshExtension_ArticleSummary_Controller extends Minz_ActionControll
     // 处理API URL - 如果缺少版本则添加（仅针对OpenAI）
     $oai_url = rtrim($oai_url, '/'); // Remove trailing slash
     if ($oai_provider !== "ollama" && !preg_match('/\/v\d+\/?$/', $oai_url)) {
-        $oai_url .= '/v1'; // If there is no version information and it's not Ollama, add /v1
+      $oai_url .= '/v1'; // If there is no version information and it's not Ollama, add /v1
     }
-    
+
     // Prepare request headers and payload based on provider
     // 根据提供商准备请求头和负载
     $requestUrl = '';
@@ -109,21 +128,21 @@ final class FreshExtension_ArticleSummary_Controller extends Minz_ActionControll
         "stream" => true,
       ];
     }
-    
+
     // Perform server-side request and stream response to client
     // 执行服务器端请求并将响应流式传输给客户端
     header('X-AI-Provider: ' . $oai_provider);
     if ($oai_provider === 'openai') {
-        header('Content-Type: text/event-stream');
+      header('Content-Type: text/event-stream');
     } else {
-        header('Content-Type: application/x-ndjson');
+      header('Content-Type: application/x-ndjson');
     }
-    
+
     // Clear output buffer before streaming
     while (ob_get_level() > 0) {
-        ob_end_clean();
+      ob_end_clean();
     }
-    
+
     $this->streamRequest($requestUrl, $headers, $payload);
   }
 

@@ -16,23 +16,49 @@ if (document.readyState && document.readyState !== 'loading') {
  * 为总结按钮配置事件监听器
  */
 function configureSummarizeButtons() {
+  // Ensure button labels are visible even before clicking the article header
+  // 确保按钮在点击文章标题之前也能显示文本
+  var summarizeBtns = document.querySelectorAll('.oai-summary-btn');
+  for (var i = 0; i < summarizeBtns.length; i++) {
+    var summarizeBtn = summarizeBtns[i];
+    if (!summarizeBtn.innerHTML) {
+      summarizeBtn.innerHTML = summarizeBtn.dataset.summarizeText || '';
+    }
+  }
+  var explainBtns = document.querySelectorAll('.oai-explain-btn');
+  for (var j = 0; j < explainBtns.length; j++) {
+    var explainBtn = explainBtns[j];
+    if (!explainBtn.innerHTML) {
+      explainBtn.innerHTML = explainBtn.dataset.explainText || '';
+    }
+  }
+
   document.getElementById('global').addEventListener('click', function (e) {
     for (var target = e.target; target && target != this; target = target.parentNode) {
       
       // Handle article header click to add text to summary button
       // 处理文章标题点击，为总结按钮添加文本
       if (target.matches('.flux_header')) {
-        const button = target.nextElementSibling.querySelector('.oai-summary-btn');
-        button.innerHTML = button.dataset.summarizeText;
+        const container = target.nextElementSibling;
+        if (container) {
+          const summarizeBtn = container.querySelector('.oai-summary-btn');
+          const explainBtn = container.querySelector('.oai-explain-btn');
+          if (summarizeBtn) {
+            summarizeBtn.innerHTML = summarizeBtn.dataset.summarizeText;
+          }
+          if (explainBtn) {
+            explainBtn.innerHTML = explainBtn.dataset.explainText;
+          }
+        }
       }
 
-      // Handle summarize button click
-      // 处理总结按钮点击
-      if (target.matches('.oai-summary-btn')) {
+      // Handle action button click (summarize/explain)
+      // 处理动作按钮点击（总结/讲解）
+      if (target.matches('.oai-summary-btn') || target.matches('.oai-explain-btn')) {
         e.preventDefault();
         e.stopPropagation();
         if (target.dataset.request) {
-          summarizeButtonClick(target);
+          oaiActionButtonClick(target);
         }
         break;
       }
@@ -50,7 +76,7 @@ function configureSummarizeButtons() {
  * @param {string} summaryText - Summary text to display when completed
  */
 function setOaiState(container, statusType, statusMsg, summaryText) {
-  const button = container.querySelector('.oai-summary-btn');
+  const buttons = container.querySelectorAll('.oai-action-btn');
   const content = container.querySelector('.oai-summary-content');
   
   // Set different states based on statusType
@@ -61,53 +87,74 @@ function setOaiState(container, statusType, statusMsg, summaryText) {
     container.classList.add('oai-loading');
     container.classList.remove('oai-error');
     content.innerHTML = statusMsg;
-    button.disabled = true;
+    for (var b1 = 0; b1 < buttons.length; b1++) {
+      buttons[b1].disabled = true;
+    }
   } else if (statusType === 2) {
     // Error state
     // 错误状态
     container.classList.remove('oai-loading');
     container.classList.add('oai-error');
     content.innerHTML = statusMsg;
-    button.disabled = false;
+    for (var b2 = 0; b2 < buttons.length; b2++) {
+      buttons[b2].disabled = false;
+      buttons[b2].classList.remove('oai-active');
+    }
   } else {
     // Success state
     // 成功状态
     container.classList.remove('oai-loading');
     container.classList.remove('oai-error');
     if (statusMsg === 'finish'){
-      button.disabled = false;
+      for (var b3 = 0; b3 < buttons.length; b3++) {
+        buttons[b3].disabled = false;
+        buttons[b3].classList.remove('oai-active');
+      }
     }
   }
 
   // Update content with summary text if provided
   // 如果提供了总结文本，则更新内容
   if (summaryText) {
-    content.innerHTML = summaryText.replace(/(?:\r\n|\r|\n)/g, '<br>');
+    content.innerHTML = summaryText;
   }
 }
 
 /**
- * Handle summarize button click event
- * 处理总结按钮点击事件
- * 
+ * Handle summarize/explain action button click event
+ * 处理总结/讲解按钮点击事件
+ *
  * @param {HTMLElement} target - The clicked button element
  */
-async function summarizeButtonClick(target) {
+async function oaiActionButtonClick(target) {
   var container = target.parentNode;
-  
+  // In current markup, buttons are inside .oai-summary-actions
+  // If that changes, fall back to closest wrapper
+  if (container && !container.classList.contains('oai-summary-wrap')) {
+    container = target.closest('.oai-summary-wrap') || target.parentNode;
+  }
+
+  if (!container) {
+    return;
+  }
+
   // Prevent multiple requests while loading
   // 加载时防止多次请求
   if (container.classList.contains('oai-loading')) {
     return;
   }
 
-  // Set loading state
-  // 设置加载状态
-  const loadingText = container.querySelector('.oai-summary-btn').dataset.loadingText;
+  // Mark active button for spinner
+  // 标记当前激活按钮用于显示加载动画
+  var allBtns = container.querySelectorAll('.oai-action-btn');
+  for (var k = 0; k < allBtns.length; k++) {
+    allBtns[k].classList.remove('oai-active');
+  }
+  target.classList.add('oai-active');
+
+  const loadingText = target.dataset.loadingText;
   setOaiState(container, 1, loadingText, null);
 
-  // Get the request URL and prepare data
-  // 获取请求URL并准备数据
   var url = target.dataset.request;
   var data = {
     ajax: true,
@@ -115,8 +162,6 @@ async function summarizeButtonClick(target) {
   };
 
   try {
-    // Send request to PHP backend
-    // 向PHP后端发送请求
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -126,30 +171,25 @@ async function summarizeButtonClick(target) {
       body: JSON.stringify(data)
     });
 
-    // Check for "missing config" error or API error (which might be returned as JSON)
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
-         const json = await response.json();
-         if (json.response && json.response.error) {
-             let errorData = json.response.data || json.response.error;
-             if (typeof errorData === 'object') {
-                 errorData = JSON.stringify(errorData);
-             }
-             throw new Error(errorData);
-         }
-         // If it's JSON but not an error, we shouldn't be here, but just in case
-         if (!response.ok) {
-             throw new Error(container.querySelector('.oai-summary-btn').dataset.requestFailedText);
-         }
-         setOaiState(container, 0, 'finish', null);
-         return;
+      const json = await response.json();
+      if (json.response && json.response.error) {
+        let errorData = json.response.data || json.response.error;
+        if (typeof errorData === 'object') {
+          errorData = JSON.stringify(errorData);
+        }
+        throw new Error(errorData);
+      }
+      if (!response.ok) {
+        throw new Error(target.dataset.requestFailedText);
+      }
+      setOaiState(container, 0, 'finish', null);
+      return;
     }
 
-    // Check if response is valid
-    // 检查响应是否有效
     if (!response.ok) {
-      const requestFailedText = container.querySelector('.oai-summary-btn').dataset.requestFailedText;
-      throw new Error(requestFailedText);
+      throw new Error(target.dataset.requestFailedText);
     }
 
     const provider = response.headers.get('X-AI-Provider');
@@ -161,8 +201,6 @@ async function summarizeButtonClick(target) {
     }
   } catch (error) {
     console.error(error);
-    // Show more specific error message
-    // 显示更具体的错误信息
     const errorMsg = error.message || 'Request Failed';
     setOaiState(container, 2, errorMsg, null);
   }

@@ -59,6 +59,15 @@ class ArticleSummaryControllerTest extends TestCase
     }
 
     /**
+     * Test that the explainAction method exists
+     * 测试 explainAction 方法是否存在
+     */
+    public function testExplainActionMethodExists(): void
+    {
+        $this->assertTrue(method_exists('FreshExtension_ArticleSummary_Controller', 'explainAction'));
+    }
+
+    /**
      * Test that the isEmpty method exists
      * 测试 isEmpty 方法是否存在
      */

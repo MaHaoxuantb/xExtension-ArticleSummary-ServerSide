@@ -3,6 +3,7 @@ $oai_url = FreshRSS_Context::$user_conf->oai_url;
 $oai_key = FreshRSS_Context::$user_conf->oai_key;
 $oai_model = FreshRSS_Context::$user_conf->oai_model;
 $oai_prompt = FreshRSS_Context::$user_conf->oai_prompt;
+$oai_explain_prompt = FreshRSS_Context::$user_conf->oai_explain_prompt;
 $oai_provider = FreshRSS_Context::$user_conf->oai_provider ?: 'openai'; // Default to OpenAI
 ?>
 <form action="<?php echo _url('extension', 'configure', 'e', urlencode($this->getName())); ?>" method="post">
@@ -22,6 +23,9 @@ $oai_provider = FreshRSS_Context::$user_conf->oai_provider ?: 'openai'; // Defau
     <input type="text" name="oai_model" id="oai_model" value="<?php echo $oai_model; ?>">
     <label for="oai_prompt"><?php echo _t('ArticleSummary.config.prompt'); ?></label>
     <textarea name="oai_prompt" id="oai_prompt" placeholder="<?php echo _t('ArticleSummary.config.default_prompt'); ?>"><?php echo $oai_prompt; ?></textarea>
+
+    <label for="oai_explain_prompt"><?php echo _t('ArticleSummary.config.explain_prompt'); ?></label>
+    <textarea name="oai_explain_prompt" id="oai_explain_prompt" placeholder="<?php echo _t('ArticleSummary.config.default_explain_prompt'); ?>"><?php echo $oai_explain_prompt; ?></textarea>
   </div>
   <hr />
   <button type="submit"><?php echo _t('ArticleSummary.config.save'); ?></button>
